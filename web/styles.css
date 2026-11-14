@@ -1974,6 +1974,27 @@ svg {
 
 /* ---------- Адаптивность ---------- */
 
+/* Компактный фильтр дат: на телефоне помещается в одну строку с отметками. */
+@media (max-width: 559px) {
+  .filters { gap: 3px; }
+  .flag-filters { gap: 4px; }
+  .flag-chip { padding-right: 5px; }
+}
+
+@media (max-width: 419px) {
+  .date-filter {
+    gap: 0;
+    padding: 0 4px 0 6px;
+  }
+  .date-filter svg { display: none; }
+  .date-filter select {
+    width: 44px;
+    max-width: 44px;
+    padding: 0 9px 0 2px;
+  }
+  .date-filter::after { right: 4px; }
+}
+
 @media (min-width: 420px) {
   .bottombar-info {
     display: flex;

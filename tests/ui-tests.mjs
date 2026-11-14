@@ -111,6 +111,19 @@ try {
   check('заголовки отметок — первые буквы', (await page.locator('.codes-table thead').innerText()).includes('В'));
   check('в заголовке действия только корзина', (await page.locator('.th-action').innerText()).trim() === '');
   check('фильтр дат содержит пять вариантов', (await page.locator('#dateFilter option').count()) === 5);
+  const dateFilter = await page.evaluate(() => {
+    const chipTops = [...document.querySelectorAll('.flag-chip')].map((node) => node.getBoundingClientRect().top);
+    const box = document.querySelector('.date-filter').getBoundingClientRect();
+    return {
+      label: document.querySelector('#dateFilter').selectedOptions[0].textContent.trim(),
+      sameRow: chipTops.every((top) => Math.abs(top - box.top) < 2),
+      right: box.right,
+      vw: window.innerWidth,
+    };
+  });
+  check('фильтр дат подписан «Даты»', dateFilter.label === 'Даты');
+  check('фильтр дат в одной строке с отметками', dateFilter.sameRow);
+  check('фильтр дат помещается по ширине', dateFilter.right <= dateFilter.vw);
 
   const layout = await page.evaluate(() => ({
     docWidth: document.documentElement.scrollWidth,
@@ -299,9 +312,12 @@ try {
     table: document.querySelector('#tableScroll').scrollWidth - document.querySelector('#tableScroll').clientWidth,
     generateVisible: document.querySelector('#generateBtn').getBoundingClientRect().width > 120,
     bottom: document.querySelector('.bottombar').getBoundingClientRect().bottom,
+    dateSameRow: [...document.querySelectorAll('.flag-chip')].every((node) => Math.abs(node.getBoundingClientRect().top - document.querySelector('.date-filter').getBoundingClientRect().top) < 2),
+    dateRight: document.querySelector('.date-filter').getBoundingClientRect().right,
   }));
   check('на 360 px нет горизонтального переполнения', narrow.overflow <= 1 && narrow.table <= 1, `doc=${narrow.overflow}, table=${narrow.table}`);
   check('кнопка формирования помещается', narrow.generateVisible);
+  check('на 360 px фильтр дат остаётся в одной строке', narrow.dateSameRow && narrow.dateRight <= 360);
   await screenshot(page, '07-mobile-360.png');
 
   console.log('\nЗаставка');

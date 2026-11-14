@@ -254,7 +254,7 @@ function renderFlagFilters() {
 function renderDateFilter() {
   const dates = uniqueDates(state.data.rows);
   if (state.filters.date && !dates.includes(state.filters.date)) state.filters.date = '';
-  el.dateFilter.innerHTML = `<option value="">Все даты</option>${dates.map((date) => `
+  el.dateFilter.innerHTML = `<option value="">Даты</option>${dates.map((date) => `
     <option value="${date}">${formatDateRu(date)}</option>
   `).join('')}`;
   el.dateFilter.value = state.filters.date;
