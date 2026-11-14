@@ -112,11 +112,13 @@ try {
   check('в заголовке действия только корзина', (await page.locator('.th-action').innerText()).trim() === '');
   check('фильтр дат содержит пять вариантов', (await page.locator('#dateFilter option').count()) === 5);
   const dateFilter = await page.evaluate(() => {
-    const chipTops = [...document.querySelectorAll('.flag-chip')].map((node) => node.getBoundingClientRect().top);
+    const chips = [...document.querySelectorAll('.flag-chip')].map((node) => node.getBoundingClientRect());
     const box = document.querySelector('.date-filter').getBoundingClientRect();
     return {
       label: document.querySelector('#dateFilter').selectedOptions[0].textContent.trim(),
-      sameRow: chipTops.every((top) => Math.abs(top - box.top) < 2),
+      sameRow: chips.every((chip) => Math.abs(chip.top - box.top) < 2),
+      gap: box.left - chips.at(-1).right,
+      width: box.width,
       right: box.right,
       vw: window.innerWidth,
     };
@@ -124,6 +126,7 @@ try {
   check('фильтр дат подписан «Даты»', dateFilter.label === 'Даты');
   check('фильтр дат в одной строке с отметками', dateFilter.sameRow);
   check('фильтр дат помещается по ширине', dateFilter.right <= dateFilter.vw);
+  check('фильтр дат расширен за счёт промежутка', dateFilter.gap <= 4 && dateFilter.width >= 90, `gap=${dateFilter.gap.toFixed(1)}, width=${dateFilter.width.toFixed(1)}`);
 
   const layout = await page.evaluate(() => ({
     docWidth: document.documentElement.scrollWidth,
@@ -149,6 +152,15 @@ try {
   await screenshot(page, '02-filters.png');
   await page.locator('#dateFilter').selectOption('2026-03-31');
   check('фильтр по дате оставляет 10 записей', (await page.locator('#tableBody tr').count()) === 10);
+  const selectedDateFits = await page.evaluate(() => {
+    const select = document.querySelector('#dateFilter');
+    const style = getComputedStyle(select);
+    const canvas = document.createElement('canvas').getContext('2d');
+    canvas.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const available = select.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    return available >= canvas.measureText(select.selectedOptions[0].textContent).width;
+  });
+  check('выбранная дата видна полностью', selectedDateFits);
   await page.locator('.flag-chip[data-flag="monad"]').click();
   check('отметки и дата складываются по «И»', (await page.locator('#tableBody tr').count()) === 1);
   await page.locator('.flag-chip[data-flag="monad"]').click();

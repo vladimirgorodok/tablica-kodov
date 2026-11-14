@@ -1976,9 +1976,32 @@ svg {
 
 /* Компактный фильтр дат: на телефоне помещается в одну строку с отметками. */
 @media (max-width: 559px) {
-  .filters { gap: 3px; }
-  .flag-filters { gap: 4px; }
+  .filters {
+    gap: 3px;
+    justify-content: space-between;
+  }
+  .flag-filters {
+    gap: 4px;
+    flex: 0 0 auto;
+  }
   .flag-chip { padding-right: 5px; }
+  .date-filter {
+    flex: 1 1 0;
+    min-width: 60px;
+    max-width: 130px;
+  }
+  .date-filter select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 339px) {
+  .date-filter {
+    flex-basis: 100%;
+    max-width: none;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 419px) {
@@ -1988,8 +2011,8 @@ svg {
   }
   .date-filter svg { display: none; }
   .date-filter select {
-    width: 44px;
-    max-width: 44px;
+    width: auto;
+    max-width: none;
     padding: 0 9px 0 2px;
   }
   .date-filter::after { right: 4px; }

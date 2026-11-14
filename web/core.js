@@ -2,7 +2,7 @@
 // Модуль используется и в браузере, и в Node-тестах.
 
 export const STORAGE_KEY = 'codeTable.v1';
-export const APP_VERSION = '1.1.1';
+export const APP_VERSION = '1.1.2';
 
 export const FLAGS = [
   { key: 'funnel', label: 'Воронка', short: 'В', hint: 'Показать записи без отметки «Воронка»' },
