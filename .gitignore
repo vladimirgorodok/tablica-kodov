@@ -1,0 +1,23 @@
+# Зависимости
+node_modules
+tests/node_modules
+
+# Сборка
+android/.gradle/
+android/build/
+android/build-manual/
+android/app/build/
+android/local.properties
+android/app/src/main/assets/www/
+
+# Ключи подписи (локальные, держать в бэкапе)
+android/release.keystore
+android/keystore.properties
+*.idsig
+
+# Редакторы и система
+.idea/
+.vscode/
+*.iml
+.DS_Store
+*.log

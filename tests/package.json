@@ -1,0 +1,11 @@
+{
+  "name": "code-table-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node run-tests.mjs && node ui-tests.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.1"
+  }
+}

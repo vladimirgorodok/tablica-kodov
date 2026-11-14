@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CodeTable" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@drawable/window_background</item>
+        <item name="android:statusBarColor">#07060d</item>
+        <item name="android:navigationBarColor">#07060d</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:colorAccent">#f0cf82</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

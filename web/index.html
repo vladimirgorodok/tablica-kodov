@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#08070f" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Таблица кодов: девять цифр, три отметки, дата занятия. Формирование и копирование кодов одним касанием." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Таблица кодов" />
+  <title>Таблица кодов</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M19.2 13.5c.05-.5.05-1 0-1.5l1.5-1.2-1.7-3-1.9.7c-.4-.3-.9-.6-1.4-.8L15.4 5h-3.5l-.3 2.2c-.5.2-1 .5-1.4.8l-1.9-.7-1.7 3 1.5 1.2c-.05.5-.05 1 0 1.5L6.6 15l1.7 3 1.9-.7c.4.3.9.6 1.4.8l.3 2.2h3.5l.3-2.2c.5-.2 1-.5 1.4-.8l1.9.7 1.7-3-1.5-1.2Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9 7V4.8h6V7M7 7l1 13h8l1-13M10 10.5l.4 6M14 10.5l-.4 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 8.5V6.9a2.4 2.4 0 0 0-2.4-2.4H6.9a2.4 2.4 0 0 0-2.4 2.4v6.2a2.4 2.4 0 0 0 2.4 2.4h1.6" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 6.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m0 0 4.2-4.2M12 15l-4.2-4.2M5 19.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V5m0 0 4.2 4.2M12 5 7.8 9.2M5 19.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.8 9.5h14.4M8 3.8v3.4M16 3.8v3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5c.7 4.4 2.9 6.6 7.3 7.3-4.4.7-6.6 2.9-7.3 7.3-.7-4.4-2.9-6.6-7.3-7.3 4.4-.7 6.6-2.9 7.3-7.3Z" fill="currentColor"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m5 19 1-4.2L16.4 4.4a1.6 1.6 0 0 1 2.3 0l1 1a1.6 1.6 0 0 1 0 2.3L9.2 18 5 19Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="18" cy="12" r="1.6" fill="currentColor"/></symbol>
+  </svg>
+
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="icons/mark.svg" alt="" width="44" height="44" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">Таблица кодов</span>
+          <span class="brand-sub">девять цифр · три отметки</span>
+        </span>
+      </div>
+      <button class="icon-btn" id="settingsBtn" type="button" aria-label="Настройки">
+        <svg><use href="#i-settings"></use></svg>
+      </button>
+    </header>
+
+    <main class="main">
+      <section id="tableScreen" class="screen screen-table" aria-label="Таблица кодов">
+        <div class="summary-row">
+          <p class="summary" id="summary">—</p>
+          <button class="text-btn" id="addTopBtn" type="button">
+            <svg><use href="#i-plus"></use></svg><span>Добавить</span>
+          </button>
+        </div>
+
+        <div class="search-field">
+          <svg class="search-icon"><use href="#i-search"></use></svg>
+          <input id="searchInput" type="search" placeholder="Поиск по наименованию" autocomplete="off" enterkeyhint="search" aria-label="Поиск по наименованию" />
+          <button class="search-clear" id="searchClear" type="button" aria-label="Очистить поиск" hidden>
+            <svg><use href="#i-close"></use></svg>
+          </button>
+        </div>
+
+        <div class="filters" aria-label="Фильтры">
+          <div class="flag-filters" id="flagFilters"></div>
+          <label class="date-filter">
+            <svg><use href="#i-calendar"></use></svg>
+            <select id="dateFilter" aria-label="Фильтр по дате занятия">
+              <option value="">Все даты</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="table-card">
+          <div class="table-scroll" id="tableScroll">
+            <table class="codes-table">
+              <colgroup>
+                <col class="col-name" />
+                <col class="col-code" />
+                <col class="col-flag" />
+                <col class="col-flag" />
+                <col class="col-flag" />
+                <col class="col-date" />
+                <col class="col-action" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col">Наименование</th>
+                  <th scope="col">Код</th>
+                  <th scope="col" class="th-flag" title="Воронка"><span>В</span></th>
+                  <th scope="col" class="th-flag" title="Проводник"><span>П</span></th>
+                  <th scope="col" class="th-flag" title="Монада"><span>М</span></th>
+                  <th scope="col" class="th-date">Дата</th>
+                  <th scope="col" class="th-action" title="Удалить"><svg><use href="#i-trash"></use></svg></th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+            <div class="empty-state" id="emptyState" hidden>
+              <svg><use href="#i-spark"></use></svg>
+              <p id="emptyTitle">Ничего не найдено</p>
+              <span id="emptyHint">Измените запрос или сбросьте фильтры</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settingsScreen" class="screen screen-settings" aria-label="Настройки" hidden>
+        <div class="screen-heading">
+          <button class="icon-btn icon-btn-quiet" id="settingsBack" type="button" aria-label="Назад">
+            <svg><use href="#i-back"></use></svg>
+          </button>
+          <div>
+            <h2>Настройки</h2>
+            <p>Данные, значения по умолчанию и места</p>
+          </div>
+        </div>
+
+        <div class="settings-scroll">
+          <section class="settings-card">
+            <div class="card-heading">
+              <span class="card-icon"><svg><use href="#i-download"></use></svg></span>
+              <div><h3>Данные</h3><p>Резервная копия и перенос между устройствами</p></div>
+            </div>
+            <div class="data-stats" id="dataStats"></div>
+            <div class="settings-actions">
+              <button class="btn btn-ghost" id="exportBtn" type="button"><svg><use href="#i-download"></use></svg><span>Экспорт</span></button>
+              <button class="btn btn-ghost" id="importBtn" type="button"><svg><use href="#i-upload"></use></svg><span>Импорт</span></button>
+              <input id="importFile" type="file" accept="application/json,.json" hidden />
+            </div>
+            <p class="hint">Экспорт содержит все записи, значения по умолчанию и список мест.</p>
+          </section>
+
+          <section class="settings-card">
+            <div class="card-heading">
+              <span class="card-icon"><svg><use href="#i-spark"></use></svg></span>
+              <div><h3>По умолчанию</h3><p>Подставляется в диалоге формирования</p></div>
+            </div>
+            <label class="field">
+              <span class="field-label">ИОФ</span>
+              <input id="defaultIof" type="text" autocomplete="name" placeholder="Фамилия Имя Отчество" />
+            </label>
+            <label class="field">
+              <span class="field-label">ДР</span>
+              <input id="defaultDr" type="text" inputmode="numeric" maxlength="8" placeholder="ДДММГГГГ" />
+            </label>
+            <p class="hint" id="defaultsHint">Изменения сохраняются автоматически</p>
+          </section>
+
+          <section class="settings-card">
+            <div class="card-heading">
+              <span class="card-icon"><svg><use href="#i-calendar"></use></svg></span>
+              <div><h3>Места</h3><p>Список для выпадающего поля</p></div>
+            </div>
+            <div class="places-list" id="placesList"></div>
+            <div class="place-add-row">
+              <input id="newPlaceInput" type="text" placeholder="Новое место" aria-label="Новое место" />
+              <button class="btn btn-small" id="addPlaceBtn" type="button"><svg><use href="#i-plus"></use></svg><span>Добавить</span></button>
+            </div>
+          </section>
+
+          <section class="settings-card settings-card-about">
+            <div class="about-row">
+              <img src="icons/mark.svg" alt="" width="40" height="40" />
+              <div>
+                <h3>Таблица кодов</h3>
+                <p>Версия <span id="appVersion">1.0.0</span> · работает офлайн</p>
+              </div>
+            </div>
+            <p class="hint">Все данные хранятся только на этом устройстве. Приложение не отправляет их в сеть.</p>
+            <button class="btn btn-danger-ghost" id="resetBtn" type="button">Сбросить к образцу (38 записей)</button>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottombar" id="bottombar">
+      <div class="bottombar-info">
+        <span class="dot-live" id="filterDot"></span>
+        <span id="filterCount">38 записей</span>
+      </div>
+      <button class="btn btn-primary" id="generateBtn" type="button">
+        <svg><use href="#i-spark"></use></svg>
+        <span>Сформировать коды</span>
+      </button>
+      <button class="btn btn-add" id="addBtn" type="button" aria-label="Добавить запись">
+        <svg><use href="#i-plus"></use></svg>
+      </button>
+    </footer>
+  </div>
+
+  <!-- Редактирование записи -->
+  <div class="modal" id="rowModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="rowModal"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rowModalTitle">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <p class="eyebrow">Запись</p>
+          <h2 id="rowModalTitle">Редактирование</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close="rowModal" aria-label="Закрыть"><svg><use href="#i-close"></use></svg></button>
+      </div>
+      <form id="rowForm" class="sheet-body" novalidate>
+        <label class="field">
+          <span class="field-label">Наименование</span>
+          <input id="rowName" type="text" placeholder="Название кода" autocomplete="off" required />
+        </label>
+
+        <div class="field">
+          <span class="field-label">Коды <em>по 9 цифр</em></span>
+          <div id="codeFields" class="code-fields"></div>
+          <button class="link-btn" id="addCodeBtn" type="button"><svg><use href="#i-plus"></use></svg> Ещё код</button>
+        </div>
+
+        <label class="field">
+          <span class="field-label">Дата занятия</span>
+          <input id="rowDate" type="date" required />
+        </label>
+
+        <div class="field">
+          <span class="field-label">Отметки</span>
+          <div class="flag-pills" id="rowFlags"></div>
+        </div>
+
+        <p class="form-error" id="rowError" role="alert" hidden></p>
+
+        <div class="sheet-actions">
+          <button class="btn btn-ghost" type="button" data-close="rowModal">Отмена</button>
+          <button class="btn btn-primary" type="submit">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Формирование кодов -->
+  <div class="modal" id="generateModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="generateModal"></div>
+    <div class="sheet sheet-tall" role="dialog" aria-modal="true" aria-labelledby="generateTitle">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <p class="eyebrow">Формирование</p>
+          <h2 id="generateTitle">Сформировать коды</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close="generateModal" aria-label="Закрыть"><svg><use href="#i-close"></use></svg></button>
+      </div>
+      <form id="generateForm" class="sheet-body generate-body" novalidate>
+        <label class="field">
+          <span class="field-label">ИОФ</span>
+          <input id="genIof" type="text" autocomplete="name" required />
+        </label>
+        <label class="field">
+          <span class="field-label">ДР</span>
+          <input id="genDr" type="text" inputmode="numeric" maxlength="8" placeholder="ДДММГГГГ" required />
+        </label>
+        <div class="field">
+          <span class="field-label">Место <em>можно ввести новое</em></span>
+          <div class="combo" id="placeCombo">
+            <input id="genPlace" type="text" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="placeList" aria-autocomplete="list" required />
+            <button class="combo-toggle" id="placeToggle" type="button" aria-label="Показать список мест"><svg><use href="#i-chevron"></use></svg></button>
+            <div class="combo-list" id="placeList" role="listbox" hidden></div>
+          </div>
+        </div>
+
+        <div class="select-head">
+          <div>
+            <span class="field-label">Коды из отфильтрованной таблицы</span>
+            <p class="select-meta" id="selectMeta"></p>
+          </div>
+          <div class="select-tools">
+            <button class="link-btn" id="selectAllBtn" type="button">Все</button>
+            <button class="link-btn" id="selectNoneBtn" type="button">Ничего</button>
+          </div>
+        </div>
+        <div class="select-list" id="selectList"></div>
+
+        <p class="form-error" id="generateError" role="alert" hidden></p>
+
+        <div class="sheet-actions sheet-actions-sticky">
+          <button class="btn btn-ghost" type="button" data-close="generateModal">Отмена</button>
+          <button class="btn btn-primary" type="submit"><svg><use href="#i-spark"></use></svg> Сформировать</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Результат -->
+  <div class="modal modal-top" id="resultModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="resultModal"></div>
+    <div class="sheet sheet-tall" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <p class="eyebrow">Готово</p>
+          <h2 id="resultTitle">Итоговый текст</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close="resultModal" aria-label="Закрыть"><svg><use href="#i-close"></use></svg></button>
+      </div>
+      <div class="sheet-body result-body">
+        <div class="result-meta"><span id="resultMeta"></span><span class="result-line"></span></div>
+        <pre id="resultText" class="result-text" tabindex="0"></pre>
+        <div class="sheet-actions sheet-actions-sticky">
+          <button class="btn btn-ghost" type="button" data-close="resultModal">Закрыть</button>
+          <button class="btn btn-primary" id="copyBtn" type="button"><svg><use href="#i-copy"></use></svg><span>Скопировать</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Подтверждение -->
+  <div class="modal modal-confirm" id="confirmModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="confirmModal"></div>
+    <div class="sheet sheet-confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmText">
+      <div class="confirm-icon" id="confirmIcon"><svg><use href="#i-trash"></use></svg></div>
+      <h2 id="confirmTitle">Удалить запись?</h2>
+      <p id="confirmText">Действие нельзя отменить.</p>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" type="button" data-close="confirmModal">Отмена</button>
+        <button class="btn btn-danger" id="confirmOk" type="button">Удалить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Заставка для PWA / браузера. В APK её заменяет нативная анимация. -->
+  <div id="splash" class="splash" hidden>
+    <div class="splash-aurora"></div>
+    <div class="splash-stars" aria-hidden="true"></div>
+    <div class="splash-stage">
+      <div class="splash-rings" aria-hidden="true">
+        <span class="ring ring-1"></span>
+        <span class="ring ring-2"></span>
+        <span class="ring ring-3"></span>
+      </div>
+      <img class="splash-logo" src="icons/mark.svg" alt="" />
+      <h1>Таблица кодов</h1>
+      <p>девять цифр · три отметки</p>
+      <div class="splash-progress"><span></span></div>
+    </div>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
