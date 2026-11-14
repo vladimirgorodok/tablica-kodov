@@ -1138,6 +1138,7 @@ function registerServiceWorker() {
 
 function init() {
   initSplash();
+  el.appVersion.textContent = APP_VERSION;
   persist();
   renderFlagFilters();
   renderDateFilter();
