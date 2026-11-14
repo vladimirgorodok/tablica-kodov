@@ -20,8 +20,8 @@ else
 fi
 BT="$SDK/build-tools/34.0.0"
 PKG="com.codetable.app"
-VERSION="1.0.0"
-VERSION_CODE="1"
+VERSION="1.1.0"
+VERSION_CODE="2"
 
 if [ ! -f "$ROOT/android/keystore.properties" ]; then
   echo "Нет android/keystore.properties." >&2

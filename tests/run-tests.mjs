@@ -117,15 +117,15 @@ test('поиск по наименованию без учёта регистр�
   assert.deepEqual(filterRows(rows, { query: 'финан' }).map((r) => r.id), ['1']);
   assert.deepEqual(filterRows(rows, { query: 'КУНД' }).map((r) => r.id), ['2']);
 });
-test('несколько отметок работают по принципу «И»', () => {
-  assert.deepEqual(filterRows(rows, { flags: ['monad'] }).map((r) => r.id), ['1', '2']);
-  assert.deepEqual(filterRows(rows, { flags: ['monad', 'guide'] }).map((r) => r.id), ['2']);
+test('несколько отметок работают по обратной логике «И»', () => {
+  assert.deepEqual(filterRows(rows, { flags: ['monad'] }).map((r) => r.id), ['3']);
+  assert.deepEqual(filterRows(rows, { flags: ['monad', 'guide'] }).map((r) => r.id), ['3']);
 });
 test('фильтр по дате', () => {
   assert.deepEqual(filterRows(rows, { date: '2026-03-31' }).map((r) => r.id), ['2']);
 });
 test('фильтры складываются', () => {
-  assert.deepEqual(filterRows(rows, { query: 'а', flags: ['funnel'], date: '2026-05-16' }).map((r) => r.id), ['3']);
+  assert.deepEqual(filterRows(rows, { query: 'а', flags: ['guide'], date: '2026-05-16' }).map((r) => r.id), ['3']);
 });
 
 console.log('\nИтоговый текст');

@@ -244,7 +244,7 @@ function askConfirm({ title, text, okText = 'Удалить', danger = true, ico
 
 function renderFlagFilters() {
   el.flagFilters.innerHTML = FLAGS.map((flag) => `
-    <button class="flag-chip" type="button" data-flag="${flag.key}" aria-pressed="${state.filters.flags.includes(flag.key)}" title="${flag.hint}">
+    <button class="flag-chip" type="button" data-flag="${flag.key}" aria-pressed="${state.filters.flags.includes(flag.key)}" aria-label="${flag.hint}" title="${flag.hint}">
       <span class="chip-box">${icon('check')}</span>
       <span>${flag.label}</span>
     </button>

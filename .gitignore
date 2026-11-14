@@ -21,3 +21,5 @@ android/keystore.properties
 *.iml
 .DS_Store
 *.log
+
+dist/*.apk

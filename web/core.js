@@ -2,12 +2,12 @@
 // Модуль используется и в браузере, и в Node-тестах.
 
 export const STORAGE_KEY = 'codeTable.v1';
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 
 export const FLAGS = [
-  { key: 'funnel', label: 'Воронка', short: 'В', hint: 'Воронка' },
-  { key: 'guide', label: 'Проводник', short: 'П', hint: 'Проводник' },
-  { key: 'monad', label: 'Монада', short: 'М', hint: 'Монада' },
+  { key: 'funnel', label: 'Воронка', short: 'В', hint: 'Показать записи без отметки «Воронка»' },
+  { key: 'guide', label: 'Проводник', short: 'П', hint: 'Показать записи без отметки «Проводник»' },
+  { key: 'monad', label: 'Монада', short: 'М', hint: 'Показать записи без отметки «Монада»' },
 ];
 
 export const DEFAULT_SETTINGS = {
@@ -132,7 +132,11 @@ export function createDefaultState(sampleRows) {
   };
 }
 
-/** Фильтрация: поиск по наименованию, отметки (логическое И), дата. */
+/**
+ * Фильтрация: поиск по наименованию, отметки (логическое И), дата.
+ * Отметки работают в обратной логике: включённый фильтр оставляет записи,
+ * у которых соответствующая отметка НЕ стоит.
+ */
 export function filterRows(rows, filters = {}) {
   const query = String(filters.query ?? '').trim().toLocaleLowerCase('ru');
   const flags = Array.isArray(filters.flags) ? filters.flags : [];
@@ -140,7 +144,7 @@ export function filterRows(rows, filters = {}) {
   return rows.filter((row) => {
     if (query && !String(row.name).toLocaleLowerCase('ru').includes(query)) return false;
     for (const flag of flags) {
-      if (!row[flag]) return false;
+      if (row[flag]) return false;
     }
     if (date && row.date !== date) return false;
     return true;

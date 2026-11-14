@@ -130,13 +130,16 @@ try {
 
   console.log('\nФильтры');
   await page.locator('.flag-chip[data-flag="guide"]').click();
-  check('фильтр «Проводник» оставляет 18 записей', (await page.locator('#tableBody tr').count()) === 18);
+  check('фильтр «Проводник» оставляет 20 записей без отметки', (await page.locator('#tableBody tr').count()) === 20);
+  check('в отфильтрованных записях нет отметки «Проводник»', (await page.locator('#tableBody .flag-toggle[data-flag="guide"][aria-pressed="true"]').count()) === 0);
   check('активный фильтр подсвечен', (await page.locator('.flag-chip[data-flag="guide"]').getAttribute('aria-pressed')) === 'true');
   await screenshot(page, '02-filters.png');
   await page.locator('#dateFilter').selectOption('2026-03-31');
-  check('отметки и дата складываются по «И»', (await page.locator('#tableBody tr').count()) === 0);
-  await page.locator('.flag-chip[data-flag="guide"]').click();
   check('фильтр по дате оставляет 10 записей', (await page.locator('#tableBody tr').count()) === 10);
+  await page.locator('.flag-chip[data-flag="monad"]').click();
+  check('отметки и дата складываются по «И»', (await page.locator('#tableBody tr').count()) === 1);
+  await page.locator('.flag-chip[data-flag="monad"]').click();
+  await page.locator('.flag-chip[data-flag="guide"]').click();
   await page.locator('#generateBtn').click();
   check('в диалог попадают только отфильтрованные записи', (await page.locator('#selectMeta').innerText()).includes('10 из 10'));
   await page.locator('#generateModal .sheet-head [data-close]').click();
@@ -162,6 +165,19 @@ try {
   check('ДР по умолчанию', (await page.locator('#genDr').inputValue()) === '04111978');
   check('место по умолчанию', (await page.locator('#genPlace').inputValue()) === 'Ленинградская область Мурино');
   check('все записи отмечены', (await page.locator('.select-item[aria-pressed="true"]').count()) === 38);
+  const genLayout = await page.evaluate(() => {
+    const sheet = document.querySelector('#generateModal .sheet').getBoundingClientRect();
+    const list = document.querySelector('#selectList').getBoundingClientRect();
+    return {
+      sheetShare: sheet.height / window.innerHeight,
+      listHeight: list.height,
+      listFont: parseFloat(getComputedStyle(document.querySelector('.select-name')).fontSize),
+      tableFont: parseFloat(getComputedStyle(document.querySelector('.name-cell')).fontSize),
+    };
+  });
+  check('экран формирования занимает почти всю высоту', genLayout.sheetShare > 0.9);
+  check('список кодов выше 300 px', genLayout.listHeight > 300);
+  check('шрифты в формировании крупнее таблицы', genLayout.listFont > genLayout.tableFont);
   await screenshot(page, '04-generate.png');
   await page.locator('#selectNoneBtn').click();
   await page.locator('.select-item').nth(0).click();
@@ -231,6 +247,7 @@ try {
   await page.waitForSelector('#confirmModal.open');
   await page.locator('#confirmOk').click();
   await page.locator('#confirmModal').waitFor({ state: 'hidden' });
+  await page.waitForFunction(() => document.querySelectorAll('#tableBody tr').length === 1);
   check('импорт заменил записи', (await page.locator('#tableBody tr').count()) === 1);
   check('импорт применил настройки', (await page.locator('#defaultIof').inputValue()) === 'Иван Иванович');
 
