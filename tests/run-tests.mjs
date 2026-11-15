@@ -176,10 +176,14 @@ test('цифра ИОФ и даты рождения считаются по т�
   assert.equal(iofDigit(''), null);
   assert.equal(birthDateDigit(''), null);
 });
-test('вторая часть двойного кода собирается из ИОФ, ДР и 1,4,7', () => {
-  assert.equal(makePersonalCode('698 275 512', 3, '358', 'Иван Иванович Иванов', '25.02.1964'), '372 625 358');
-  assert.equal(makePersonalCode('698 275 512', 3, '358', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr), '344 625 358');
-  assert.equal(makePersonalCode('123', 3, '358', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr), '');
+test('вторая часть двойного кода собирается по порядку формулы', () => {
+  assert.equal(
+    makePersonalCode('698 275 512', 'Иван Иванович Иванов', '25.02.1964', 3, '358', ['program', 'iof', 'dr', 'positions', 'suffix']),
+    '372 625 358',
+  );
+  assert.equal(makePersonalCode('698 275 512', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr, 3, '358'), '443 625 358');
+  assert.equal(makePersonalCode('276 813 762', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr, 9, '312'), '449 287 312');
+  assert.equal(makePersonalCode('123', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr, 3, '358'), '');
 });
 test('список с эфира разбирается в 19 записей и 22 кода', () => {
   const parsed = parseCodesText(etherText, { date: '2026-11-15' });
@@ -194,9 +198,9 @@ test('список с эфира разбирается в 19 записей и 
 test('двойные коды получают персональную вторую часть', () => {
   const parsed = parseCodesText(etherText, { date: '2026-11-15' });
   const byName = Object.fromEntries(parsed.rows.map((item) => [item.name, item.codes]));
-  assert.deepEqual(byName['ДНК силы молодости и красоты'], ['698 275 512', '344 625 358']);
-  assert.deepEqual(byName['Новая программа'], ['138 555 162', '944 151 932']);
-  assert.deepEqual(byName['Кортизол'], ['276 813 762', '944 287 312']);
+  assert.deepEqual(byName['ДНК силы молодости и красоты'], ['698 275 512', '443 625 358']);
+  assert.deepEqual(byName['Новая программа'], ['138 555 162', '449 151 932']);
+  assert.deepEqual(byName['Кортизол'], ['276 813 762', '449 287 312']);
   assert.deepEqual(byName['Осознанное восприятие'], ['268 169 246']);
 });
 test('заголовки и пояснения не превращаются в записи', () => {

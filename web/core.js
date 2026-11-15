@@ -2,7 +2,7 @@
 // Модуль используется и в браузере, и в Node-тестах.
 
 export const STORAGE_KEY = 'codeTable.v1';
-export const APP_VERSION = '1.2.1';
+export const APP_VERSION = '1.2.2';
 
 export const FLAGS = [
   { key: 'funnel', label: 'Воронка', short: 'В', hint: 'Показать записи без отметки «Воронка»' },
@@ -98,10 +98,19 @@ export function birthDateDigit(value) {
 }
 
 /**
- * Вторая часть двойного кода:
- * цифра программы + ИОФ + ДР + 1,4,7 цифры первой части + выданные 3 цифры.
+ * Вторая часть двойного кода.
+ * Порядок компонентов берётся из формулы как она написана:
+ * «ИОФ + ДР + 9 + 1,4,7 … + 312» → ИОФ, ДР, программа, 1,4,7, суффикс.
+ * По умолчанию используется именно эфирный порядок, а не порядок урока.
  */
-export function makePersonalCode(baseCode, programDigit, suffix, iof, dr) {
+export function makePersonalCode(
+  baseCode,
+  iof,
+  dr,
+  programDigit,
+  suffix,
+  order = ['iof', 'dr', 'program', 'positions', 'suffix'],
+) {
   const base = digitsOf(baseCode);
   const program = digitsOf(programDigit);
   const tail = digitsOf(suffix);
@@ -110,7 +119,15 @@ export function makePersonalCode(baseCode, programDigit, suffix, iof, dr) {
   if (base.length !== 9 || program.length !== 1 || tail.length !== 3 || iofValue === null || drValue === null) {
     return '';
   }
-  return formatCode(`${program}${iofValue}${drValue}${base[0]}${base[3]}${base[6]}${tail}`);
+  const parts = {
+    iof: String(iofValue),
+    dr: String(drValue),
+    program,
+    positions: `${base[0]}${base[3]}${base[6]}`,
+    suffix: tail,
+  };
+  const code = order.map((part) => parts[part] ?? '').join('');
+  return code.length === 9 ? formatCode(code) : '';
 }
 
 function extractSpacedCodes(line) {
@@ -161,8 +178,28 @@ function extractAssembledCode(line) {
 
 function parsePersonalFormula(line) {
   if (!/ИОФ/i.test(line) || !/ДР/i.test(line)) return null;
-  const match = /ИОФ\s*\+\s*ДР\s*\+\s*(\d)\s*\+\s*1\s*[,/]\s*4\s*[,/]\s*7[^+]*\+\s*(\d{3})/i.exec(line);
-  return match ? { programDigit: match[1], suffix: match[2] } : null;
+  const parts = line.split('+').map((part) => part.trim()).filter(Boolean);
+  const order = [];
+  let programDigit = '';
+  let suffix = '';
+  for (const part of parts) {
+    if (/ИОФ/i.test(part)) {
+      order.push('iof');
+    } else if (/ДР/i.test(part)) {
+      order.push('dr');
+    } else if (/^\d$/.test(part)) {
+      order.push('program');
+      programDigit = part;
+    } else if (/1\s*[,/]\s*4\s*[,/]\s*7/i.test(part)) {
+      order.push('positions');
+    } else if (/^\d{3}$/.test(part)) {
+      order.push('suffix');
+      suffix = part;
+    }
+  }
+  const needed = ['iof', 'dr', 'program', 'positions', 'suffix'];
+  if (!programDigit || !suffix || needed.some((part) => !order.includes(part))) return null;
+  return { programDigit, suffix, order };
 }
 
 function cleanName(value) {
@@ -218,7 +255,14 @@ export function parseCodesText(text, options = {}) {
         warnings.push(`Формула без базового кода: ${line}`);
         continue;
       }
-      const personal = makePersonalCode(baseRow.codes[0], value.formula.programDigit, value.formula.suffix, iof, dr);
+      const personal = makePersonalCode(
+        baseRow.codes[0],
+        iof,
+        dr,
+        value.formula.programDigit,
+        value.formula.suffix,
+        value.formula.order,
+      );
       if (!personal) {
         warnings.push(`Не удалось собрать персональный код: ${line}`);
       } else if (!baseRow.codes.includes(personal)) {
