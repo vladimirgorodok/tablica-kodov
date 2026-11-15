@@ -10,6 +10,7 @@ import {
   formatDateRu,
   formatPlace,
   makeId,
+  parseCodesText,
   parseImport,
   placeSuggestions,
   sanitizeRow,
@@ -97,6 +98,12 @@ const el = {
   exportBtn: $('#exportBtn'),
   importBtn: $('#importBtn'),
   importFile: $('#importFile'),
+  textImportBtn: $('#textImportBtn'),
+  textImportForm: $('#textImportForm'),
+  textImportDate: $('#textImportDate'),
+  textImportText: $('#textImportText'),
+  textImportHint: $('#textImportHint'),
+  textImportError: $('#textImportError'),
   defaultIof: $('#defaultIof'),
   defaultDr: $('#defaultDr'),
   defaultsHint: $('#defaultsHint'),
@@ -796,6 +803,88 @@ function pickImportFile() {
   el.importFile.click();
 }
 
+const TEXT_IMPORT_HINT = 'Строки вида «Название: 123 456 789». Двойной код собирается по текущим ИОФ и ДР.';
+
+function textImportOptions() {
+  return {
+    date: el.textImportDate.value,
+    iof: state.data.settings.iof,
+    dr: state.data.settings.dr,
+  };
+}
+
+function recordKey(row) {
+  return [String(row.name).toLocaleLowerCase('ru'), row.codes.join('|'), row.date].join('::');
+}
+
+function openTextImport() {
+  el.textImportDate.value = todayISO();
+  el.textImportText.value = '';
+  el.textImportHint.textContent = TEXT_IMPORT_HINT;
+  setError(el.textImportError, '');
+  openModal('textImportModal');
+  window.setTimeout(() => el.textImportText.focus({ preventScroll: true }), 30);
+}
+
+function updateTextImportHint() {
+  const text = el.textImportText.value;
+  if (!text.trim()) {
+    el.textImportHint.textContent = TEXT_IMPORT_HINT;
+    return;
+  }
+  const parsed = parseCodesText(text, textImportOptions());
+  const count = parsed.rows.length;
+  if (!count) {
+    el.textImportHint.textContent = 'Записи не найдены. Проверьте, что в строках есть коды по 9 цифр.';
+    return;
+  }
+  const codes = parsed.rows.reduce((total, row) => total + row.codes.length, 0);
+  const warningText = parsed.warnings.length ? ` · пропущено строк: ${parsed.warnings.length}` : '';
+  el.textImportHint.textContent = `Найдено: ${count} ${plural(count, 'запись', 'записи', 'записей')}, ${codes} ${plural(codes, 'код', 'кода', 'кодов')}${warningText}.`;
+}
+
+function submitTextImport(event) {
+  event.preventDefault();
+  setError(el.textImportError, '');
+  const date = el.textImportDate.value;
+  if (!date) {
+    setError(el.textImportError, 'Укажите дату занятия.');
+    el.textImportDate.focus();
+    return;
+  }
+  if (!el.textImportText.value.trim()) {
+    setError(el.textImportError, 'Вставьте список кодов.');
+    el.textImportText.focus();
+    return;
+  }
+  const parsed = parseCodesText(el.textImportText.value, textImportOptions());
+  if (!parsed.rows.length) {
+    setError(el.textImportError, parsed.warnings[0] || 'В тексте не найдено ни одной записи с кодом.');
+    return;
+  }
+  const seen = new Set(state.data.rows.map(recordKey));
+  const fresh = [];
+  for (const row of parsed.rows) {
+    const key = recordKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    fresh.push(row);
+  }
+  if (!fresh.length) {
+    setError(el.textImportError, 'Все найденные записи уже есть в таблице.');
+    return;
+  }
+  state.data.rows.push(...fresh);
+  persist();
+  closeModal('textImportModal');
+  renderDateFilter();
+  applyFilters();
+  renderDataStats();
+  const skipped = parsed.rows.length - fresh.length;
+  const skippedText = skipped ? `, пропущено: ${skipped}` : '';
+  toast(`Добавлено: ${fresh.length} ${plural(fresh.length, 'запись', 'записи', 'записей')}${skippedText}`);
+}
+
 function resetToSample() {
   askConfirm({
     title: 'Сбросить к образцу?',
@@ -997,6 +1086,10 @@ function bindEvents() {
 
   el.exportBtn.addEventListener('click', exportData);
   el.importBtn.addEventListener('click', pickImportFile);
+  el.textImportBtn.addEventListener('click', openTextImport);
+  el.textImportForm.addEventListener('submit', submitTextImport);
+  el.textImportText.addEventListener('input', updateTextImportHint);
+  el.textImportDate.addEventListener('change', updateTextImportHint);
   el.importFile.addEventListener('change', async () => {
     const file = el.importFile.files && el.importFile.files[0];
     if (!file) return;

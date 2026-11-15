@@ -15,6 +15,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB = path.resolve(HERE, '..', 'web');
 const SHOTS = path.resolve(HERE, '..', 'docs', 'screenshots');
 const TMP = '/tmp/opencode/code-table-tests';
+const ETHER_FIXTURE = path.join(HERE, 'fixtures', 'ether-2026-11-15.txt');
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -231,6 +232,7 @@ try {
   check('итоговый текст соответствует правилам', resultText.replace(/\n$/, '') === expected, `строк: ${resultText.trim().split('\n').length}`);
   check('перенос после «область» и «район»', resultText.includes('Московская область\nОдинцовский район\nг. Одинцово'));
   check('двойной код на отдельных строках', resultText.includes('г. Одинцово\n019 910 581\n449 095 936'));
+  await page.waitForTimeout(350);
   await screenshot(page, '05-result.png');
 
   await page.evaluate(() => {
@@ -314,6 +316,37 @@ try {
   await page.locator('#confirmOk').click();
   await page.waitForTimeout(120);
   check('сброс к образцу возвращает 38 записей', (await page.locator('#tableBody tr').count()) === 38);
+
+  console.log('\nДобавление кодов из текста');
+  const etherText = await readFile(ETHER_FIXTURE, 'utf8');
+  await page.locator('#textImportBtn').click();
+  await page.waitForSelector('#textImportModal.open');
+  check('диалог добавления из текста открылся', await page.locator('#textImportModal').isVisible());
+  await page.locator('#textImportDate').fill('2026-11-15');
+  await page.locator('#textImportText').fill(etherText);
+  await page.waitForFunction(() => document.querySelector('#textImportHint').textContent.includes('19'));
+  check('предпросмотр нашёл 19 записей', (await page.locator('#textImportHint').innerText()).includes('19 записей'));
+  await page.locator('#textImportForm button[type="submit"]').click();
+  await page.locator('#textImportModal').waitFor({ state: 'hidden' });
+  await page.waitForFunction(() => document.querySelectorAll('#tableBody tr').length === 57);
+  check('импорт из текста добавил 19 записей', (await page.locator('#tableBody tr').count()) === 57);
+  const imported = await page.evaluate(() => JSON.parse(localStorage.getItem('codeTable.v1')).rows.filter((row) => row.date === '2026-11-15'));
+  check('в импорте 22 кода и двойные коды собраны', imported.length === 19 && imported.reduce((n, row) => n + row.codes.length, 0) === 22);
+  check('осознанное восприятие собрано из частей', imported.some((row) => row.name === 'Осознанное восприятие' && row.codes[0] === '268 169 246'));
+  check('у двойного кода две части', imported.some((row) => row.name === 'Кортизол' && row.codes.length === 2));
+
+  await page.locator('#textImportBtn').click();
+  await page.locator('#textImportDate').fill('2026-11-15');
+  await page.locator('#textImportText').fill(etherText);
+  await page.locator('#textImportForm button[type="submit"]').click();
+  await page.waitForFunction(() => !document.querySelector('#textImportError').hidden);
+  check('повторный импорт не создаёт дубли', (await page.locator('#textImportError').innerText()).includes('уже есть'));
+  check('число записей не изменилось', (await page.locator('#tableBody tr').count()) === 57);
+  await page.locator('#textImportModal .sheet-head [data-close]').click();
+  await page.locator('#resetBtn').click();
+  await page.locator('#confirmOk').click();
+  await page.waitForTimeout(120);
+  check('после проверки снова 38 записей', (await page.locator('#tableBody tr').count()) === 38);
   await page.locator('#settingsBack').click();
 
   console.log('\nМобильная ширина 360 px');

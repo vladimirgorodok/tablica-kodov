@@ -1,13 +1,18 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   DEFAULT_SETTINGS,
+  birthDateDigit,
   buildText,
   exportJSON,
   filterRows,
   formatCode,
   formatDateRu,
   formatPlace,
+  iofDigit,
   isValidCode,
+  makePersonalCode,
+  parseCodesText,
   parseImport,
   placeSuggestions,
   sanitizeRow,
@@ -17,6 +22,8 @@ import {
   uniqueDates,
   wordCount,
 } from '../web/core.js';
+
+const etherText = readFileSync(new URL('./fixtures/ether-2026-11-15.txt', import.meta.url), 'utf8');
 
 let passed = 0;
 const failures = [];
@@ -157,6 +164,56 @@ test('место с районом разбивается, следующий к
 });
 test('пустой список даёт пустую строку', () => {
   assert.equal(buildText([], { iof: 'И', dr: 'Д', place: 'М' }), '');
+});
+
+console.log('\nРазбор списка кодов');
+test('цифра ИОФ и даты рождения считаются по таблице Хамилии', () => {
+  assert.equal(iofDigit('Владимир Владимирович Кравченко'), 4);
+  assert.equal(birthDateDigit('04111978'), 4);
+  assert.equal(iofDigit('Иван Иванович Иванов'), 7);
+  assert.equal(birthDateDigit('25.02.1964'), 2);
+  assert.equal(iofDigit(''), null);
+  assert.equal(birthDateDigit(''), null);
+});
+test('вторая часть двойного кода собирается из ИОФ, ДР и 1,4,7', () => {
+  assert.equal(makePersonalCode('698 275 512', 3, '358', 'Иван Иванович Иванов', '25.02.1964'), '372 625 358');
+  assert.equal(makePersonalCode('698 275 512', 3, '358', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr), '344 625 358');
+  assert.equal(makePersonalCode('123', 3, '358', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr), '');
+});
+test('список с эфира разбирается в 19 записей и 22 кода', () => {
+  const parsed = parseCodesText(etherText, { date: '2026-11-15' });
+  assert.equal(parsed.rows.length, 19);
+  assert.equal(parsed.rows.reduce((count, item) => count + item.codes.length, 0), 22);
+  assert.deepEqual(parsed.warnings, []);
+  assert.equal(parsed.rows[0].name, 'Восстановление тела через события');
+  assert.deepEqual(parsed.rows[0].codes, ['327 982 725']);
+  assert.equal(parsed.rows[0].date, '2026-11-15');
+  assert.equal(parsed.rows[0].funnel, false);
+});
+test('двойные коды получают персональную вторую часть', () => {
+  const parsed = parseCodesText(etherText, { date: '2026-11-15' });
+  const byName = Object.fromEntries(parsed.rows.map((item) => [item.name, item.codes]));
+  assert.deepEqual(byName['ДНК силы молодости и красоты'], ['698 275 512', '344 625 358']);
+  assert.deepEqual(byName['Новая программа'], ['138 555 162', '944 151 932']);
+  assert.deepEqual(byName['Кортизол'], ['276 813 762', '944 287 312']);
+  assert.deepEqual(byName['Осознанное восприятие'], ['268 169 246']);
+});
+test('заголовки и пояснения не превращаются в записи', () => {
+  const parsed = parseCodesText(etherText, { date: '2026-11-15' });
+  const names = parsed.rows.map((item) => item.name);
+  assert.ok(!names.includes('ВЫДАННЫЕ КОДЫ НА ЭФИРЕ'));
+  assert.ok(!names.includes('ДНК заболевания закрыть/обнулить'));
+  assert.ok(!names.some((name) => name.startsWith('Коды с эфира')));
+});
+test('код на следующей строке получает название заголовка', () => {
+  const parsed = parseCodesText('Новый код:\n123 456 789\nЕщё код: 987 654 321', { date: '2026-11-15' });
+  assert.equal(parsed.rows.length, 2);
+  assert.equal(parsed.rows[0].name, 'Новый код');
+  assert.deepEqual(parsed.rows[1].codes, ['987 654 321']);
+});
+test('список без кодов возвращает предупреждения, а не записи', () => {
+  const parsed = parseCodesText('Просто текст без кодов', { date: '2026-11-15' });
+  assert.equal(parsed.rows.length, 0);
 });
 
 console.log('\nИмпорт и экспорт');

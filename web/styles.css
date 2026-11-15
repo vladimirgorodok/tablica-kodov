@@ -833,6 +833,11 @@ svg {
   pointer-events: none;
 }
 
+.btn-block {
+  width: 100%;
+  margin-top: 8px;
+}
+
 .btn-primary {
   flex: 1 1 auto;
   color: #1a1220;
@@ -1076,6 +1081,32 @@ svg {
 .field input[type="date"] {
   color-scheme: dark;
   font-variant-numeric: tabular-nums;
+}
+
+.field textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.16);
+  outline: none;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.45;
+  resize: vertical;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+
+.field textarea::placeholder {
+  color: var(--muted-2);
+}
+
+.field textarea:focus {
+  border-color: rgba(240, 207, 130, 0.48);
+  background: rgba(0, 0, 0, 0.24);
+  box-shadow: 0 0 0 3px rgba(240, 207, 130, 0.08);
 }
 
 .places-list {
@@ -2078,6 +2109,7 @@ svg {
   .summary-row { display: none; }
   .select-list { max-height: 26dvh; }
   #generateModal .select-list { max-height: none; min-height: 120px; }
+  .field textarea { min-height: 120px; }
 }
 
 /* На очень низких экранах форма целиком прокручивается, чтобы кнопки не обрезались. */

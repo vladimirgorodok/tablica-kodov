@@ -1,5 +1,5 @@
 /* Офлайн-кэш приложения. Версию менять вместе с APP_VERSION. */
-const CACHE = 'code-table-v1.1.2';
+const CACHE = 'code-table-v1.2.0';
 const ASSETS = [
   './',
   './index.html',

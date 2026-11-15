@@ -2,7 +2,7 @@
 // Модуль используется и в браузере, и в Node-тестах.
 
 export const STORAGE_KEY = 'codeTable.v1';
-export const APP_VERSION = '1.1.2';
+export const APP_VERSION = '1.2.0';
 
 export const FLAGS = [
   { key: 'funnel', label: 'Воронка', short: 'В', hint: 'Показать записи без отметки «Воронка»' },
@@ -51,6 +51,214 @@ export function formatPlace(value) {
     .replace(/[ \t]*\n[ \t]*/g, '\n')
     .replace(/\n{2,}/g, '\n')
     .trim();
+}
+
+/**
+ * Таблица букв в цифры из системы Хамилия.
+ * Ё = 7, Е = 6; латиница и служебные символы не участвуют.
+ */
+const LETTER_DIGITS = {
+  А: 1, И: 1, С: 1, Ъ: 1,
+  Б: 2, Й: 2, Т: 2, Ы: 2,
+  В: 3, К: 3, У: 3, Ь: 3,
+  Г: 4, Л: 4, Ф: 4, Э: 4,
+  Д: 5, М: 5, Х: 5, Ю: 5,
+  Е: 6, Н: 6, Ц: 6, Я: 6,
+  Ё: 7, О: 7, Ч: 7,
+  Ж: 8, П: 8, Ш: 8,
+  З: 9, Р: 9, Щ: 9,
+};
+
+/** Сворачивает число до одной цифры. */
+export function digitalRoot(value) {
+  const number = Math.abs(Math.trunc(Number(value)));
+  if (!Number.isFinite(number)) return null;
+  return number === 0 ? 0 : 1 + ((number - 1) % 9);
+}
+
+/** Цифра ИОФ: сумма цифр всех букв имени, отчества и фамилии. */
+export function iofDigit(iof) {
+  const text = String(iof ?? '').toLocaleUpperCase('ru');
+  let sum = 0;
+  let found = false;
+  for (const letter of text) {
+    if (LETTER_DIGITS[letter]) {
+      sum += LETTER_DIGITS[letter];
+      found = true;
+    }
+  }
+  return found ? digitalRoot(sum) : null;
+}
+
+/** Цифра даты рождения: сумма всех цифр ДДММГГГГ. */
+export function birthDateDigit(value) {
+  const digits = digitsOf(value);
+  if (!digits) return null;
+  return digitalRoot([...digits].reduce((sum, digit) => sum + Number(digit), 0));
+}
+
+/**
+ * Вторая часть двойного кода:
+ * цифра программы + ИОФ + ДР + 1,4,7 цифры первой части + выданные 3 цифры.
+ */
+export function makePersonalCode(baseCode, programDigit, suffix, iof, dr) {
+  const base = digitsOf(baseCode);
+  const program = digitsOf(programDigit);
+  const tail = digitsOf(suffix);
+  const iofValue = iofDigit(iof);
+  const drValue = birthDateDigit(dr);
+  if (base.length !== 9 || program.length !== 1 || tail.length !== 3 || iofValue === null || drValue === null) {
+    return '';
+  }
+  return formatCode(`${program}${iofValue}${drValue}${base[0]}${base[3]}${base[6]}${tail}`);
+}
+
+function extractSpacedCodes(line) {
+  const codes = [];
+  const re = /(?:^|[^\d])(\d{3})\s+(\d{3})\s+(\d{3})(?!\d)/g;
+  let match = re.exec(line);
+  while (match) {
+    codes.push(formatCode(`${match[1]}${match[2]}${match[3]}`));
+    match = re.exec(line);
+  }
+  return codes;
+}
+
+function extractContiguousCodes(line) {
+  const codes = [];
+  const re = /(?:^|[^\d])(\d{9})(?!\d)/g;
+  let match = re.exec(line);
+  while (match) {
+    codes.push(formatCode(match[1]));
+    match = re.exec(line);
+  }
+  return codes;
+}
+
+function extractCodes(line) {
+  return [...new Set([...extractSpacedCodes(line), ...extractContiguousCodes(line)])];
+}
+
+function firstCodeIndex(line) {
+  const match = /(?:^|[^\d])(?:\d{3}\s+\d{3}\s+\d{3}|\d{9})(?!\d)/.exec(line);
+  return match ? match.index + (match[0].length - match[0].trimStart().length) : -1;
+}
+
+/** Собирает код из строки вида «268 + Тело (1) + Эмоции (6) + 246». */
+function extractAssembledCode(line) {
+  if (line.includes(':') || !line.includes('+')) return '';
+  const parts = line.split('+').map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) return '';
+  const chunks = parts.map((part) => {
+    const direct = /^(\d{1,3})$/.exec(part);
+    if (direct) return direct[1];
+    const parenthetical = /\((\d{1,3})\)/.exec(part);
+    return parenthetical ? parenthetical[1] : '';
+  });
+  const joined = chunks.join('');
+  return joined.length === 9 ? formatCode(joined) : '';
+}
+
+function parsePersonalFormula(line) {
+  if (!/ИОФ/i.test(line) || !/ДР/i.test(line)) return null;
+  const match = /ИОФ\s*\+\s*ДР\s*\+\s*(\d)\s*\+\s*1\s*[,/]\s*4\s*[,/]\s*7[^+]*\+\s*(\d{3})/i.exec(line);
+  return match ? { programDigit: match[1], suffix: match[2] } : null;
+}
+
+function cleanName(value) {
+  return String(value ?? '')
+    .replace(/^[\s:–—-]+/, '')
+    .replace(/[\s:–—-]+$/, '')
+    .replace(/^Двойной код\s*[-–—:]\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function lineValue(line) {
+  const formula = parsePersonalFormula(line);
+  if (formula) return { formula };
+  const codes = extractCodes(line);
+  if (codes.length) {
+    const index = firstCodeIndex(line);
+    const prefix = index > 0 ? cleanName(line.slice(0, index)) : '';
+    return { codes, name: prefix, bare: !prefix };
+  }
+  const assembled = extractAssembledCode(line);
+  if (assembled) return { codes: [assembled], name: '', bare: true };
+  return null;
+}
+
+function isAllCapsHeading(line) {
+  const letters = line.replace(/[^A-Za-zА-Яа-яЁё]/g, '');
+  return Boolean(letters) && letters === letters.toLocaleUpperCase('ru');
+}
+
+/**
+ * Разбирает вставленный список кодов с эфира/занятия.
+ * Поддерживает строки «Название: 123 456 789», коды на следующей строке,
+ * составные коды через «+» и формулы второй части двойного кода.
+ */
+export function parseCodesText(text, options = {}) {
+  const lines = String(text ?? '').replace(/\r\n?/g, '\n').split('\n');
+  const date = toISODate(options.date) || options.date || todayISO();
+  const iof = options.iof ?? DEFAULT_SETTINGS.iof;
+  const dr = options.dr ?? DEFAULT_SETTINGS.dr;
+  const rows = [];
+  const warnings = [];
+  let pendingName = '';
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (!line) continue;
+
+    const value = lineValue(line);
+    if (value && value.formula) {
+      const baseRow = rows[rows.length - 1];
+      if (!baseRow || !baseRow.codes.length) {
+        warnings.push(`Формула без базового кода: ${line}`);
+        continue;
+      }
+      const personal = makePersonalCode(baseRow.codes[0], value.formula.programDigit, value.formula.suffix, iof, dr);
+      if (!personal) {
+        warnings.push(`Не удалось собрать персональный код: ${line}`);
+      } else if (!baseRow.codes.includes(personal)) {
+        baseRow.codes.push(personal);
+      }
+      continue;
+    }
+
+    if (value && value.codes.length) {
+      const name = cleanName(value.name || pendingName);
+      if (!name) {
+        warnings.push(`Код без названия: ${line}`);
+        pendingName = '';
+        continue;
+      }
+      const row = sanitizeRow({ name, codes: value.codes, date });
+      if (row) rows.push(row);
+      pendingName = '';
+      continue;
+    }
+
+    if (isAllCapsHeading(line)) {
+      pendingName = '';
+      continue;
+    }
+
+    if (/[:：]\s*$/.test(line)) {
+      let nextLine = '';
+      for (let next = index + 1; next < lines.length; next += 1) {
+        if (lines[next].trim()) {
+          nextLine = lines[next].trim();
+          break;
+        }
+      }
+      const nextValue = nextLine ? lineValue(nextLine) : null;
+      if (nextValue && nextValue.bare) pendingName = cleanName(line);
+    }
+  }
+
+  return { rows, warnings };
 }
 
 /** ISO-дата (2026-03-14) → 14.03.2026. */

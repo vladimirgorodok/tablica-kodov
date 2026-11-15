@@ -135,7 +135,8 @@
               <button class="btn btn-ghost" id="importBtn" type="button"><svg><use href="#i-upload"></use></svg><span>Импорт</span></button>
               <input id="importFile" type="file" accept="application/json,.json" hidden />
             </div>
-            <p class="hint">Экспорт содержит все записи, значения по умолчанию и список мест.</p>
+            <button class="btn btn-ghost btn-block" id="textImportBtn" type="button"><svg><use href="#i-spark"></use></svg><span>Добавить коды из текста</span></button>
+            <p class="hint">Вставьте список с эфира — названия и коды разберутся автоматически. Двойные коды собираются по текущим ИОФ и ДР.</p>
           </section>
 
           <section class="settings-card">
@@ -171,7 +172,7 @@
               <img src="icons/mark.svg" alt="" width="40" height="40" />
               <div>
                 <h3>Таблица кодов</h3>
-                <p>Версия <span id="appVersion">1.1.2</span> · работает офлайн</p>
+                <p>Версия <span id="appVersion">1.2.0</span> · работает офлайн</p>
               </div>
             </div>
             <p class="hint">Все данные хранятся только на этом устройстве. Приложение не отправляет их в сеть.</p>
@@ -312,6 +313,37 @@
           <button class="btn btn-primary" id="copyBtn" type="button"><svg><use href="#i-copy"></use></svg><span>Скопировать</span></button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Добавление кодов из текста -->
+  <div class="modal" id="textImportModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="textImportModal"></div>
+    <div class="sheet sheet-tall" role="dialog" aria-modal="true" aria-labelledby="textImportTitle">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div>
+          <p class="eyebrow">Новые коды</p>
+          <h2 id="textImportTitle">Добавить из текста</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close="textImportModal" aria-label="Закрыть"><svg><use href="#i-close"></use></svg></button>
+      </div>
+      <form id="textImportForm" class="sheet-body" novalidate>
+        <label class="field">
+          <span class="field-label">Дата занятия</span>
+          <input id="textImportDate" type="date" required />
+        </label>
+        <label class="field">
+          <span class="field-label">Список кодов <em>можно вставить как есть</em></span>
+          <textarea id="textImportText" rows="10" placeholder="Название: 123 456 789" required></textarea>
+        </label>
+        <p class="hint" id="textImportHint">Строки вида «Название: 123 456 789». Двойной код собирается по текущим ИОФ и ДР.</p>
+        <p class="form-error" id="textImportError" role="alert" hidden></p>
+        <div class="sheet-actions">
+          <button class="btn btn-ghost" type="button" data-close="textImportModal">Отмена</button>
+          <button class="btn btn-primary" type="submit"><svg><use href="#i-plus"></use></svg> Добавить</button>
+        </div>
+      </form>
     </div>
   </div>
 
