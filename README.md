@@ -131,7 +131,7 @@ cp android/keystore.example.properties android/keystore.properties
 ANDROID_HOME=/path/to/android-sdk scripts/build-apk.sh
 ```
 
-Результат: `dist/tablica-kodov-v1.2.0.apk`. Скрипт копирует `web/` в assets, собирает ресурсы, dex, выравнивает и подписывает APK. При первом запуске создаётся `android/release.keystore`. Ключ подписи и `android/keystore.properties` не входят в репозиторий — храните их отдельно, иначе обновления APK получат другую подпись.
+Результат: `dist/tablica-kodov-v1.2.1.apk`. Скрипт копирует `web/` в assets, собирает ресурсы, dex, выравнивает и подписывает APK. При первом запуске создаётся `android/release.keystore`. Ключ подписи и `android/keystore.properties` не входят в репозиторий — храните их отдельно, иначе обновления APK получат другую подпись.
 
 Сборка через Gradle не обязательна. Ручной пайплайн выбран потому, что `aapt2` из SDK не запускается в ARM64-окружении, где готовился проект.
 

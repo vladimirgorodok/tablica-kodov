@@ -2,7 +2,7 @@
 // Модуль используется и в браузере, и в Node-тестах.
 
 export const STORAGE_KEY = 'codeTable.v1';
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '1.2.1';
 
 export const FLAGS = [
   { key: 'funnel', label: 'Воронка', short: 'В', hint: 'Показать записи без отметки «Воронка»' },
@@ -167,7 +167,7 @@ function parsePersonalFormula(line) {
 
 function cleanName(value) {
   return String(value ?? '')
-    .replace(/^[\s:–—-]+/, '')
+    .replace(/^[^\p{L}\p{N}]+/u, '')
     .replace(/[\s:–—-]+$/, '')
     .replace(/^Двойной код\s*[-–—:]\s*/i, '')
     .replace(/\s+/g, ' ')
@@ -245,16 +245,17 @@ export function parseCodesText(text, options = {}) {
       continue;
     }
 
-    if (/[:：]\s*$/.test(line)) {
-      let nextLine = '';
-      for (let next = index + 1; next < lines.length; next += 1) {
-        if (lines[next].trim()) {
-          nextLine = lines[next].trim();
-          break;
-        }
+    let nextLine = '';
+    for (let next = index + 1; next < lines.length; next += 1) {
+      if (lines[next].trim()) {
+        nextLine = lines[next].trim();
+        break;
       }
-      const nextValue = nextLine ? lineValue(nextLine) : null;
-      if (nextValue && nextValue.bare) pendingName = cleanName(line);
+    }
+    const nextValue = nextLine ? lineValue(nextLine) : null;
+    if (nextValue && nextValue.bare) {
+      const candidate = cleanName(line);
+      if (candidate) pendingName = candidate;
     }
   }
 

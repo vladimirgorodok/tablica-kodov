@@ -16,6 +16,7 @@ const WEB = path.resolve(HERE, '..', 'web');
 const SHOTS = path.resolve(HERE, '..', 'docs', 'screenshots');
 const TMP = '/tmp/opencode/code-table-tests';
 const ETHER_FIXTURE = path.join(HERE, 'fixtures', 'ether-2026-11-15.txt');
+const ENERGY_FIXTURE = path.join(HERE, 'fixtures', 'energy-resource-2026-11-08.txt');
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -347,6 +348,25 @@ try {
   await page.locator('#confirmOk').click();
   await page.waitForTimeout(120);
   check('после проверки снова 38 записей', (await page.locator('#tableBody tr').count()) === 38);
+
+  console.log('\nСписок с эфира 08.11.2026');
+  const energyText = await readFile(ENERGY_FIXTURE, 'utf8');
+  await page.locator('#textImportBtn').click();
+  await page.locator('#textImportDate').fill('2026-11-08');
+  await page.locator('#textImportText').fill(energyText);
+  await page.waitForFunction(() => document.querySelector('#textImportHint').textContent.includes('10'));
+  check('список без двоеточий распознан', (await page.locator('#textImportHint').innerText()).includes('10 записей'));
+  await page.locator('#textImportForm button[type="submit"]').click();
+  await page.locator('#textImportModal').waitFor({ state: 'hidden' });
+  await page.waitForFunction(() => document.querySelectorAll('#tableBody tr').length === 48);
+  check('добавлены все 10 кодов', (await page.locator('#tableBody tr').count()) === 48);
+  const energyRows = await page.evaluate(() => JSON.parse(localStorage.getItem('codeTable.v1')).rows.filter((row) => row.date === '2026-11-08'));
+  check('названия очищены от эмодзи', energyRows.length === 10 && energyRows[0].name === 'Код на активность преобразований' && energyRows[9].name === 'Код на открытие нового мира');
+  check('дата эфира сохранена', energyRows.every((row) => row.date === '2026-11-08'));
+  await page.locator('#resetBtn').click();
+  await page.locator('#confirmOk').click();
+  await page.waitForTimeout(120);
+  check('после второго списка снова 38 записей', (await page.locator('#tableBody tr').count()) === 38);
   await page.locator('#settingsBack').click();
 
   console.log('\nМобильная ширина 360 px');

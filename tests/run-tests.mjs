@@ -24,6 +24,7 @@ import {
 } from '../web/core.js';
 
 const etherText = readFileSync(new URL('./fixtures/ether-2026-11-15.txt', import.meta.url), 'utf8');
+const energyText = readFileSync(new URL('./fixtures/energy-resource-2026-11-08.txt', import.meta.url), 'utf8');
 
 let passed = 0;
 const failures = [];
@@ -210,6 +211,18 @@ test('код на следующей строке получает назван�
   assert.equal(parsed.rows.length, 2);
   assert.equal(parsed.rows[0].name, 'Новый код');
   assert.deepEqual(parsed.rows[1].codes, ['987 654 321']);
+});
+test('список без двоеточий и с эмодзи разбирается', () => {
+  const parsed = parseCodesText(energyText, { date: '2026-11-08' });
+  assert.equal(parsed.rows.length, 10);
+  assert.equal(parsed.rows.reduce((count, item) => count + item.codes.length, 0), 10);
+  assert.deepEqual(parsed.warnings, []);
+  assert.equal(parsed.rows[0].name, 'Код на активность преобразований');
+  assert.deepEqual(parsed.rows[0].codes, ['267 158 853']);
+  assert.equal(parsed.rows[9].name, 'Код на открытие нового мира');
+  assert.deepEqual(parsed.rows[9].codes, ['357 358 246']);
+  assert.ok(parsed.rows.every((item) => /^[\p{L}\p{N}]/u.test(item.name)));
+  assert.equal(parsed.rows[0].date, '2026-11-08');
 });
 test('список без кодов возвращает предупреждения, а не записи', () => {
   const parsed = parseCodesText('Просто текст без кодов', { date: '2026-11-15' });
