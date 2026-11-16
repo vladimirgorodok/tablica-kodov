@@ -15,7 +15,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB = path.resolve(HERE, '..', 'web');
 const SHOTS = path.resolve(HERE, '..', 'docs', 'screenshots');
 const TMP = '/tmp/opencode/code-table-tests';
-const ETHER_FIXTURE = path.join(HERE, 'fixtures', 'ether-2026-11-15.txt');
+const ETHER_FIXTURE = path.join(HERE, 'fixtures', 'ether-2026-11-14.txt');
 const ENERGY_FIXTURE = path.join(HERE, 'fixtures', 'energy-resource-2026-11-08.txt');
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -323,7 +323,7 @@ try {
   await page.locator('#textImportBtn').click();
   await page.waitForSelector('#textImportModal.open');
   check('диалог добавления из текста открылся', await page.locator('#textImportModal').isVisible());
-  await page.locator('#textImportDate').fill('2026-11-15');
+  await page.locator('#textImportDate').fill('2026-11-14');
   await page.locator('#textImportText').fill(etherText);
   await page.waitForFunction(() => document.querySelector('#textImportHint').textContent.includes('19'));
   check('предпросмотр нашёл 19 записей', (await page.locator('#textImportHint').innerText()).includes('19 записей'));
@@ -331,13 +331,13 @@ try {
   await page.locator('#textImportModal').waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.querySelectorAll('#tableBody tr').length === 57);
   check('импорт из текста добавил 19 записей', (await page.locator('#tableBody tr').count()) === 57);
-  const imported = await page.evaluate(() => JSON.parse(localStorage.getItem('codeTable.v1')).rows.filter((row) => row.date === '2026-11-15'));
+  const imported = await page.evaluate(() => JSON.parse(localStorage.getItem('codeTable.v1')).rows.filter((row) => row.date === '2026-11-14'));
   check('в импорте 22 кода и двойные коды собраны', imported.length === 19 && imported.reduce((n, row) => n + row.codes.length, 0) === 22);
   check('осознанное восприятие собрано из частей', imported.some((row) => row.name === 'Осознанное восприятие' && row.codes[0] === '268 169 246'));
   check('у двойного кода две части', imported.some((row) => row.name === 'Кортизол' && row.codes.length === 2));
 
   await page.locator('#textImportBtn').click();
-  await page.locator('#textImportDate').fill('2026-11-15');
+  await page.locator('#textImportDate').fill('2026-11-14');
   await page.locator('#textImportText').fill(etherText);
   await page.locator('#textImportForm button[type="submit"]').click();
   await page.waitForFunction(() => !document.querySelector('#textImportError').hidden);

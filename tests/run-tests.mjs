@@ -23,7 +23,7 @@ import {
   wordCount,
 } from '../web/core.js';
 
-const etherText = readFileSync(new URL('./fixtures/ether-2026-11-15.txt', import.meta.url), 'utf8');
+const etherText = readFileSync(new URL('./fixtures/ether-2026-11-14.txt', import.meta.url), 'utf8');
 const energyText = readFileSync(new URL('./fixtures/energy-resource-2026-11-08.txt', import.meta.url), 'utf8');
 
 let passed = 0;
@@ -186,17 +186,17 @@ test('вторая часть двойного кода собирается п�
   assert.equal(makePersonalCode('123', DEFAULT_SETTINGS.iof, DEFAULT_SETTINGS.dr, 3, '358'), '');
 });
 test('список с эфира разбирается в 19 записей и 22 кода', () => {
-  const parsed = parseCodesText(etherText, { date: '2026-11-15' });
+  const parsed = parseCodesText(etherText, { date: '2026-11-14' });
   assert.equal(parsed.rows.length, 19);
   assert.equal(parsed.rows.reduce((count, item) => count + item.codes.length, 0), 22);
   assert.deepEqual(parsed.warnings, []);
   assert.equal(parsed.rows[0].name, 'Восстановление тела через события');
   assert.deepEqual(parsed.rows[0].codes, ['327 982 725']);
-  assert.equal(parsed.rows[0].date, '2026-11-15');
+  assert.equal(parsed.rows[0].date, '2026-11-14');
   assert.equal(parsed.rows[0].funnel, false);
 });
 test('двойные коды получают персональную вторую часть', () => {
-  const parsed = parseCodesText(etherText, { date: '2026-11-15' });
+  const parsed = parseCodesText(etherText, { date: '2026-11-14' });
   const byName = Object.fromEntries(parsed.rows.map((item) => [item.name, item.codes]));
   assert.deepEqual(byName['ДНК силы молодости и красоты'], ['698 275 512', '443 625 358']);
   assert.deepEqual(byName['Новая программа'], ['138 555 162', '449 151 932']);
@@ -204,14 +204,14 @@ test('двойные коды получают персональную втор
   assert.deepEqual(byName['Осознанное восприятие'], ['268 169 246']);
 });
 test('заголовки и пояснения не превращаются в записи', () => {
-  const parsed = parseCodesText(etherText, { date: '2026-11-15' });
+  const parsed = parseCodesText(etherText, { date: '2026-11-14' });
   const names = parsed.rows.map((item) => item.name);
   assert.ok(!names.includes('ВЫДАННЫЕ КОДЫ НА ЭФИРЕ'));
   assert.ok(!names.includes('ДНК заболевания закрыть/обнулить'));
   assert.ok(!names.some((name) => name.startsWith('Коды с эфира')));
 });
 test('код на следующей строке получает название заголовка', () => {
-  const parsed = parseCodesText('Новый код:\n123 456 789\nЕщё код: 987 654 321', { date: '2026-11-15' });
+  const parsed = parseCodesText('Новый код:\n123 456 789\nЕщё код: 987 654 321', { date: '2026-11-14' });
   assert.equal(parsed.rows.length, 2);
   assert.equal(parsed.rows[0].name, 'Новый код');
   assert.deepEqual(parsed.rows[1].codes, ['987 654 321']);
@@ -229,7 +229,7 @@ test('список без двоеточий и с эмодзи разбирае
   assert.equal(parsed.rows[0].date, '2026-11-08');
 });
 test('список без кодов возвращает предупреждения, а не записи', () => {
-  const parsed = parseCodesText('Просто текст без кодов', { date: '2026-11-15' });
+  const parsed = parseCodesText('Просто текст без кодов', { date: '2026-11-14' });
   assert.equal(parsed.rows.length, 0);
 });
 
