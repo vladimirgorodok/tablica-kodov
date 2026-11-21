@@ -2,7 +2,7 @@
 // Модуль используется и в браузере, и в Node-тестах.
 
 export const STORAGE_KEY = 'codeTable.v1';
-export const APP_VERSION = '1.2.2';
+export const APP_VERSION = '1.3.0';
 
 export const FLAGS = [
   { key: 'funnel', label: 'Воронка', short: 'В', hint: 'Показать записи без отметки «Воронка»' },
@@ -10,10 +10,21 @@ export const FLAGS = [
   { key: 'monad', label: 'Монада', short: 'М', hint: 'Показать записи без отметки «Монада»' },
 ];
 
+/** Доступные темы оформления. Ключи совпадают с [data-theme] в styles.css. */
+export const THEMES = [
+  { key: 'dark', label: 'Ночная', hint: 'Тёмный фон с золотом', meta: '#08070f', scheme: 'dark' },
+  { key: 'light', label: 'Светлая', hint: 'Светлый интерфейс', meta: '#f4f1f9', scheme: 'light' },
+  { key: 'sepia', label: 'Сепия', hint: 'Тёплая бумага', meta: '#f3e7d0', scheme: 'light' },
+  { key: 'contrast', label: 'Контрастная', hint: 'Чёрный фон, яркие акценты', meta: '#000000', scheme: 'dark' },
+];
+
+export const DEFAULT_THEME = 'dark';
+
 export const DEFAULT_SETTINGS = {
   iof: 'Владимир Владимирович Кравченко',
   dr: '04111978',
   places: ['Ленинградская область Мурино'],
+  theme: DEFAULT_THEME,
 };
 
 /** Оставляет только цифры кода. */
@@ -369,10 +380,12 @@ export function sanitizeSettings(value) {
   const places = Array.isArray(source.places)
     ? [...new Set(source.places.map((p) => String(p ?? '').trim().replace(/\s+/g, ' ')).filter(Boolean))]
     : [...DEFAULT_SETTINGS.places];
+  const theme = THEMES.some((item) => item.key === source.theme) ? source.theme : DEFAULT_THEME;
   return {
     iof: String(source.iof ?? DEFAULT_SETTINGS.iof).trim() || DEFAULT_SETTINGS.iof,
     dr: String(source.dr ?? DEFAULT_SETTINGS.dr).trim() || DEFAULT_SETTINGS.dr,
     places: places.length ? places : [...DEFAULT_SETTINGS.places],
+    theme,
   };
 }
 

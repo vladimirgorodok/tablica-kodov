@@ -257,6 +257,23 @@ try {
   check('новое место сохранено в список', places.includes('Московская область Одинцовский район г. Одинцово'), places.join(' | '));
   await screenshot(page, '06-settings.png');
 
+  console.log('\nТемы оформления');
+  check('в настройках четыре темы', (await page.locator('#themeGrid .theme-option').count()) === 4);
+  check('текущая тема отмечена', (await page.locator('#themeGrid .theme-option[aria-checked="true"]').getAttribute('data-theme')) === 'dark');
+  await page.locator('#themeGrid .theme-option[data-theme="light"]').click();
+  await page.waitForTimeout(150);
+  check('светлая тема применена', (await page.evaluate(() => document.documentElement.dataset.theme)) === 'light');
+  check('мета-тема обновилась', (await page.getAttribute('meta[name="theme-color"]', 'content')) === '#f4f1f9');
+  await screenshot(page, '09-theme-light.png');
+  await page.locator('#themeGrid .theme-option[data-theme="sepia"]').click();
+  await page.waitForTimeout(150);
+  check('тема «Сепия» применяется', (await page.evaluate(() => document.documentElement.dataset.theme)) === 'sepia');
+  await screenshot(page, '10-theme-sepia.png');
+  await page.locator('#themeGrid .theme-option[data-theme="dark"]').click();
+  await page.waitForTimeout(120);
+  check('возврат к ночной теме', (await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark');
+  check('тема сохранена в хранилище', (await page.evaluate(() => JSON.parse(localStorage.getItem('codeTable.v1')).settings.theme)) === 'dark');
+
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#exportBtn').click();
   const download = await downloadPromise;
@@ -384,6 +401,22 @@ try {
   check('кнопка формирования помещается', narrow.generateVisible);
   check('на 360 px фильтр дат остаётся в одной строке', narrow.dateSameRow && narrow.dateRight <= 360);
   await screenshot(page, '07-mobile-360.png');
+
+  console.log('\nПланшетный альбом');
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.waitForTimeout(300);
+  const tablet = await page.evaluate(() => ({
+    overflow: document.documentElement.scrollWidth - window.innerWidth,
+    shell: document.querySelector('#app').getBoundingClientRect().width,
+    table: document.querySelector('#tableScroll').scrollWidth - document.querySelector('#tableScroll').clientWidth,
+    nameFont: parseFloat(getComputedStyle(document.querySelector('.name-cell')).fontSize),
+    tableWidth: document.querySelector('.table-card').getBoundingClientRect().width,
+  }));
+  check('на планшете оболочка шире 900 px', tablet.shell > 900, `${Math.round(tablet.shell)}px`);
+  check('таблица раскрывается на всю ширину', tablet.tableWidth > 900, `${Math.round(tablet.tableWidth)}px`);
+  check('на планшете нет переполнения', tablet.overflow <= 1 && tablet.table <= 1, `doc=${tablet.overflow}, table=${tablet.table}`);
+  check('шрифт таблицы крупнее на планшете', tablet.nameFont >= 15, `${tablet.nameFont}px`);
+  await screenshot(page, '11-tablet-landscape.png');
 
   console.log('\nЗаставка');
   await page.setViewportSize({ width: 390, height: 844 });

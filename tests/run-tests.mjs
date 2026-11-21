@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   DEFAULT_SETTINGS,
+  THEMES,
   birthDateDigit,
   buildText,
   exportJSON,
@@ -254,7 +255,7 @@ test('parseImport принимает полный экспорт', () => {
   const parsed = parseImport(raw);
   assert.equal(parsed.rows.length, 1);
   assert.equal(parsed.rows[0].name, 'Код');
-  assert.deepEqual(parsed.settings, { iof: 'И', dr: 'Д', places: ['Место'] });
+  assert.deepEqual(parsed.settings, { iof: 'И', dr: 'Д', places: ['Место'], theme: 'dark' });
 });
 test('parseImport принимает простой массив', () => {
   const parsed = parseImport('[{"name":"Код","codes":["123456789"],"date":"14.03.2026"}]');
@@ -269,7 +270,7 @@ test('parseImport сообщает об ошибке', () => {
 test('экспорт и повторный импорт сохраняют данные', () => {
   const state = {
     rows: [row()],
-    settings: { iof: 'И', dr: '04111978', places: ['Ленинградская область Мурино'] },
+    settings: { iof: 'И', dr: '04111978', places: ['Ленинградская область Мурино'], theme: 'dark' },
   };
   const json = exportJSON(state, new Date('2026-11-14T00:00:00Z'));
   const parsed = parseImport(json);
@@ -281,6 +282,20 @@ test('экспорт и повторный импорт сохраняют да�
 test('sanitizeSettings добавляет значения по умолчанию', () => {
   assert.deepEqual(sanitizeSettings(null), DEFAULT_SETTINGS);
   assert.deepEqual(sanitizeSettings({ places: ['  A ', 'A', ''] }).places, ['A']);
+});
+test('темы оформления валидируются', () => {
+  assert.equal(THEMES.length, 4);
+  assert.deepEqual(THEMES.map((item) => item.key), ['dark', 'light', 'sepia', 'contrast']);
+  assert.equal(sanitizeSettings(null).theme, 'dark');
+  assert.equal(sanitizeSettings({ theme: 'sepia' }).theme, 'sepia');
+  assert.equal(sanitizeSettings({ theme: 'neon' }).theme, 'dark');
+  assert.equal(sanitizeSettings({ theme: '' }).theme, 'dark');
+});
+test('поворот экрана разрешён для планшета', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../web/manifest.webmanifest', import.meta.url), 'utf8'));
+  assert.equal(manifest.orientation, 'any');
+  const android = readFileSync(new URL('../android/app/src/main/AndroidManifest.xml', import.meta.url), 'utf8');
+  assert.match(android, /android:screenOrientation="fullUser"/);
 });
 test('подсказки мест фильтруются и не повторяются', () => {
   assert.deepEqual(placeSuggestions(['Москва', 'Мурино', 'Москва'], 'мур'), ['Мурино']);

@@ -19,6 +19,7 @@ import {
   todayISO,
   uniqueDates,
   wordCount,
+  THEMES,
 } from './core.js';
 import { SAMPLE_ROWS } from './data.js';
 
@@ -110,6 +111,7 @@ const el = {
   placesList: $('#placesList'),
   newPlaceInput: $('#newPlaceInput'),
   addPlaceBtn: $('#addPlaceBtn'),
+  themeGrid: $('#themeGrid'),
   resetBtn: $('#resetBtn'),
   dataStats: $('#dataStats'),
   appVersion: $('#appVersion'),
@@ -691,11 +693,47 @@ function showTable() {
 }
 
 function renderSettings() {
+  applyTheme(state.data.settings.theme);
+  renderThemeOptions();
   el.defaultIof.value = state.data.settings.iof;
   el.defaultDr.value = state.data.settings.dr;
   el.appVersion.textContent = APP_VERSION;
   renderPlaces();
   renderDataStats();
+}
+
+/** Применяет тему: атрибут на <html>, системная схема и цвет строки браузера. */
+function applyTheme(theme) {
+  const known = THEMES.find((item) => item.key === theme) || THEMES[0];
+  document.documentElement.dataset.theme = known.key;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', known.meta);
+  const scheme = document.querySelector('meta[name="color-scheme"]');
+  if (scheme) scheme.setAttribute('content', known.scheme);
+}
+
+function renderThemeOptions() {
+  if (!el.themeGrid) return;
+  const current = state.data.settings.theme;
+  el.themeGrid.innerHTML = THEMES.map((theme) => `
+    <button class="theme-option" type="button" role="radio" aria-checked="${theme.key === current}" data-theme="${theme.key}">
+      <span class="theme-swatch" data-swatch="${theme.key}" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="theme-copy">
+        <span class="theme-name">${theme.label}</span>
+        <span class="theme-hint">${theme.hint}</span>
+      </span>
+    </button>
+  `).join('');
+}
+
+function chooseTheme(theme) {
+  if (!THEMES.some((item) => item.key === theme)) return;
+  if (state.data.settings.theme === theme) return;
+  state.data.settings.theme = theme;
+  persist();
+  applyTheme(theme);
+  renderThemeOptions();
+  toast('Тема изменена');
 }
 
 function renderDataStats() {
@@ -1156,9 +1194,17 @@ function bindEvents() {
   });
   el.resetBtn.addEventListener('click', resetToSample);
 
+  if (el.themeGrid) {
+    el.themeGrid.addEventListener('click', (event) => {
+      const option = event.target.closest('.theme-option');
+      if (option) chooseTheme(option.dataset.theme);
+    });
+  }
+
   window.addEventListener('storage', (event) => {
     if (event.key !== STORAGE_KEY) return;
     state.data = loadState();
+    applyTheme(state.data.settings.theme);
     renderDateFilter();
     applyFilters();
     if (!el.settingsScreen.hidden) renderSettings();
@@ -1230,6 +1276,7 @@ function registerServiceWorker() {
 }
 
 function init() {
+  applyTheme(state.data.settings.theme);
   initSplash();
   el.appVersion.textContent = APP_VERSION;
   persist();
